@@ -23,7 +23,7 @@ class Dotenv
 
         $filePath = rtrim($path, '/') . '/' . $file;
         if (!is_readable($filePath) || !is_file($filePath)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf(
                     "Dotenv: Environment file %s not found or not readable. " .
                     "Create file with your environment settings at %s",
@@ -46,7 +46,7 @@ class Dotenv
             }
             // Only use non-empty lines that look like setters
             if (strpos($line, '=') !== false) {
-                static::setEnvironmentVariable($line);
+                self::setEnvironmentVariable($line);
             }
         }
     }
@@ -64,11 +64,11 @@ class Dotenv
      */
     public static function setEnvironmentVariable($name, $value = null)
     {
-        list($name, $value) = static::normaliseEnvironmentVariable($name, $value);
+        list($name, $value) = self::normaliseEnvironmentVariable($name, $value);
 
         // Don't overwrite existing environment variables if we're immutable
         // Ruby's dotenv does this with `ENV[key] ||= value`.
-        if (static::$immutable === true && !is_null(static::findEnvironmentVariable($name))) {
+        if (self::$immutable === true && !is_null(self::findEnvironmentVariable($name))) {
             return;
         }
 
@@ -92,7 +92,7 @@ class Dotenv
         $missingEnvironmentVariables = array();
 
         foreach ($environmentVariables as $environmentVariable) {
-            $value = static::findEnvironmentVariable($environmentVariable);
+            $value = self::findEnvironmentVariable($environmentVariable);
             if (is_null($value)) {
                 $missingEnvironmentVariables[] = $environmentVariable;
             } elseif ($allowedValues) {
@@ -104,7 +104,7 @@ class Dotenv
         }
 
         if ($missingEnvironmentVariables) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 sprintf(
                     "Required environment variable missing, or value not allowed: '%s'",
                     implode("', '", $missingEnvironmentVariables)
@@ -128,10 +128,10 @@ class Dotenv
      */
     protected static function normaliseEnvironmentVariable($name, $value)
     {
-        list($name, $value) = static::splitCompoundStringIntoParts($name, $value);
-        $name  = static::sanitiseVariableName($name);
-        $value = static::sanitiseVariableValue($value);
-        $value = static::resolveNestedVariables($value);
+        list($name, $value) = self::splitCompoundStringIntoParts($name, $value);
+        $name  = self::sanitiseVariableName($name);
+        $value = self::sanitiseVariableValue($value);
+        $value = self::resolveNestedVariables($value);
 
         return array($name, $value);
     }
@@ -249,7 +249,7 @@ class Dotenv
      */
     public static function isImmutable()
     {
-        return static::$immutable;
+        return self::$immutable;
     }
 
     /**
@@ -257,7 +257,7 @@ class Dotenv
      */
     public static function makeImmutable()
     {
-        static::$immutable = true;
+        self::$immutable = true;
     }
 
     /**
@@ -265,6 +265,16 @@ class Dotenv
      */
     public static function makeMutable()
     {
-        static::$immutable = false;
+        self::$immutable = false;
+    }
+
+    private static function matchPatterns($patterns)
+    {
+        $nestedVariable = self::findEnvironmentVariable($matchedPatterns[1]);
+        if (is_null($nestedVariable)) {
+            return $matchedPatterns[0];
+        } else {
+            return $nestedVariable;
+        }
     }
 }
