@@ -209,14 +209,7 @@ class Dotenv
         if (strpos($value, '$') !== false) {
             $value = preg_replace_callback(
                 '/{\$([a-zA-Z0-9_]+)}/',
-                function ($matchedPatterns) {
-                    $nestedVariable = Dotenv::findEnvironmentVariable($matchedPatterns[1]);
-                    if (is_null($nestedVariable)) {
-                        return $matchedPatterns[0];
-                    } else {
-                        return  $nestedVariable;
-                    }
-                },
+                "self::matchedPatterns",
                 $value
             );
         }
